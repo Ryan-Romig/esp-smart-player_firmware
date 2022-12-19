@@ -1,0 +1,27 @@
+{
+    "configurations": [
+        {
+            "name": "ESP-IDF",
+            "defines": [],
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "${default}",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+            "includePath": [
+                "${config:idf.espIdfPath}/components/**",
+                "${config:idf.espAdfPath}/components/**",
+                "${workspaceFolder}//**",
+                "${workspaceFolder}/components/**",
+            ],
+            "browse": {
+                "path": [
+                    "${config:idf.espIdfPath}/components",
+                    "${config:idf.espAdfPath}/components",
+                    "${workspaceFolder}/"
+                ],
+                "limitSymbolsToIncludedHeaders": false
+            }
+        }
+    ],
+    "version": 4
+}
