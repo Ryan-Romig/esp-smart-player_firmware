@@ -11,6 +11,8 @@
 #include "lwip/sys.h"
 #include "nvs_flash.h"
 #include <string.h>
+#include "lwip/apps/netbiosns.h"
+
 #include "../../main/Global.h"
 
 #include "mdns.h"
@@ -40,9 +42,6 @@ static EventGroupHandle_t s_wifi_event_group;
 /* The event group allows multiple bits for each event, but we only care about two events:
  * - we are connected to the AP with an IP
  * - we failed to connect after the maximum amount of retries */
-#define WIFI_CONNECTED_BIT BIT0
-#define WIFI_FAIL_BIT BIT1
-#define WIFI_MAX_RETRY 15
 
 static int s_retry_num = 0;
 
@@ -50,7 +49,6 @@ static int s_retry_num = 0;
 
 #define MDNS_INSTANCE "ESP_MDNS"
 
-static const char *TAG = "REST SERVER";
 
 esp_err_t start_rest_server(const char *base_path);
 
