@@ -52,7 +52,7 @@ static int s_retry_num = 0;
 
 esp_err_t start_rest_server(const char *base_path);
 
-static void initialize_mdns(void)
+static void init_mdns(void)
 {
     mdns_init();
     mdns_hostname_set(MDNS_HOST_NAME);
@@ -154,6 +154,7 @@ void init_wifi()
 
     esp_netif_create_default_wifi_ap();
     esp_netif_create_default_wifi_sta();
+    init_mdns();
 }
 void print_ip()
 {
