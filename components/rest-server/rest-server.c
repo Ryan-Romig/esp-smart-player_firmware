@@ -169,6 +169,7 @@ static esp_err_t post_handler(httpd_req_t* req)
 
         if (strcmp(key, "wifi_ssid") == 0 || strcmp(key, "wifi_password") == 0) {
             NVS_Write_String("WIFI", key, value);
+            printf('got wifi config');  
         }
         NVS_Write_String("config", key, value);
         printf("Value: %s\n", value);
@@ -184,9 +185,9 @@ static esp_err_t post_handler(httpd_req_t* req)
 static esp_err_t get_handler(httpd_req_t* req)
 {
     httpd_resp_set_type(req, "application/json");
-    char* time = NVS_Read_String("config", "time");
+    char* ssid = NVS_Read_String("config", "wifi_ssid");
     cJSON* root = cJSON_CreateObject();
-    cJSON_AddStringToObject(root, "time", time);
+    cJSON_AddStringToObject(root, "ssid", ssid);
     const char* sys_info = cJSON_Print(root);
     httpd_resp_sendstr(req, sys_info);
     free((void*)sys_info);

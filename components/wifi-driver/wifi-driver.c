@@ -98,13 +98,18 @@ void init_sta_mode()
 {
     ESP_LOGI(TAG, "starting station mode");
 
-    if (firstRun > 0 && isApMode == true) {
+    if (firstRun > 0) {
         ESP_ERROR_CHECK(esp_wifi_stop());
         ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_NULL));
     }
-    firstRun = 1;
     char* ssid_ptr = NVS_Read_String(NVS_NAMESPACE, "wifi_ssid");
     char* password_ptr = NVS_Read_String(NVS_NAMESPACE, "wifi_password");
+    if (ssid_ptr == NULL) {
+        // Handle the error
+        printf("Failed to read the SSID from NVS\n");
+        init_ap_mode();
+        return;
+    }
 
     wifi_config_t wifi_config = {
     .sta = {
@@ -124,6 +129,7 @@ void init_sta_mode()
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
     ESP_LOGI(TAG, "wifi_init_sta finished.");
+    firstRun = 1;
 }
 
 void init_wifi()
