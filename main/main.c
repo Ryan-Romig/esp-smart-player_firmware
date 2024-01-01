@@ -27,7 +27,7 @@ void app_main(void)
     start_wifi_server();
     while(1){
         if(isWifiConnected == 1){
-            init_player();
+            // init_player();
             break;
         }
         vTaskDelay(1000 / portTICK_PERIOD_MS);

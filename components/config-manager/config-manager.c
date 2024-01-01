@@ -21,9 +21,6 @@ void init_nvs()
         err = nvs_flash_init();
     }
     ESP_ERROR_CHECK(err);
-
-    // NVS_Write_String(NVS_NAMESPACE, "wifi_ssid", WIFI_SSID);
-    // NVS_Write_String(NVS_NAMESPACE, "wifi_password", WIFI_PASSWORD);
 }
 void NVS_Write_String(const char* name, const char* key, const char* stringVal)
 {

@@ -1,37 +1,15 @@
-/* HTTP Restful API Server Example
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
 #include "../../components/captive-portal/include/captive-portal.h"
 #include "../../components/config-manager/include/config-manager.h"
+#include "../../components/wifi-driver/include/wifi-driver.h"
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_netif.h"
 #include "sdkconfig.h"
-// #include "protocol_examples_common.h"
-
-/* HTTP Restful API Server
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-
-
-*/
-
-// #include "esp_vfs_fat.h"
+#include <string.h>
 #include "esp_log.h"
 #include "esp_spiffs.h"
 #include "lwip/apps/netbiosns.h"
-
 #include "esp_spiffs.h"
-
 #include "cJSON.h"
 #include "esp_http_server.h"
 #include "esp_log.h"
@@ -39,7 +17,6 @@
 #include "esp_vfs.h"
 #include <fcntl.h>
 #include <string.h>
-
 static const char* TAG = "REST SERVER";
 #define WEB_STORAGE_MOUNT_POINT "/www"
 #define REST_CHECK(a, str, goto_tag, ...)                                                                              \
@@ -189,12 +166,17 @@ static esp_err_t post_handler(httpd_req_t* req)
         const char* value = json_item->valuestring;
         const char* key = json_item->string;
         cJSON* root = cJSON_Parse(buf);
+
+        if (strcmp(key, "wifi_ssid") == 0 || strcmp(key, "wifi_password") == 0) {
+            NVS_Write_String("WIFI", key, value);
+        }
         NVS_Write_String("config", key, value);
         printf("Value: %s\n", value);
         printf("Key: %s\n", key);
     }
     cJSON_Delete(root);
     httpd_resp_sendstr(req, "Post control value successfully");
+    init_sta_mode();
     return ESP_OK;
 }
 

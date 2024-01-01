@@ -34,7 +34,8 @@ function HomePage() {
         <div>
 {data}
             <form onSubmit={handleFormSubmit}>
-                <input name="time"></input>
+                <input name="wifi_ssid"></input>
+                <input name="wifi_password"></input>
                 <button type="submit">Submit</button>
             </form>
         </div>

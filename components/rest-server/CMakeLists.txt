@@ -1,7 +1,7 @@
 idf_component_register(SRCS "rest-server.c"
                     INCLUDE_DIRS "include"
                     REQUIRES json esp_http_server spiffs
-                    PRIV_REQUIRES captive-portal config-manager)
+                    PRIV_REQUIRES captive-portal config-manager wifi-driver)
 
 set(WEB_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/front-end/web")
 if(EXISTS ${WEB_SRC_DIR}/dist)

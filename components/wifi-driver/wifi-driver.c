@@ -7,17 +7,15 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "freertos/task.h"
+#include "lwip/apps/netbiosns.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "nvs_flash.h"
 #include <string.h>
-#include "lwip/apps/netbiosns.h"
 
 #include "../../main/Global.h"
 
 #include "mdns.h"
-
-
 
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
@@ -49,8 +47,7 @@ static int s_retry_num = 0;
 
 #define MDNS_INSTANCE "ESP_MDNS"
 
-
-esp_err_t start_rest_server(const char *base_path);
+esp_err_t start_rest_server(const char* base_path);
 
 static void init_mdns(void)
 {
@@ -58,20 +55,14 @@ static void init_mdns(void)
     mdns_hostname_set(MDNS_HOST_NAME);
     mdns_instance_name_set(MDNS_INSTANCE);
 
-    mdns_txt_item_t serviceTxtData[] = {
-        {"board", "esp32"},
-        {"path", "/"}
-    };
+    mdns_txt_item_t serviceTxtData[] = { { "board", "esp32" }, { "path", "/" } };
 
-    ESP_ERROR_CHECK(mdns_service_add("ESP32-WebServer", "_http", "_tcp", 80, serviceTxtData,
-                                     sizeof(serviceTxtData) / sizeof(serviceTxtData[0])));
+    ESP_ERROR_CHECK(mdns_service_add(
+        "ESP32-WebServer", "_http", "_tcp", 80, serviceTxtData, sizeof(serviceTxtData) / sizeof(serviceTxtData[0])));
 
     netbiosns_init();
     netbiosns_set_name(MDNS_HOST_NAME);
 }
-
-
-
 
 static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
 {
@@ -92,11 +83,10 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
         ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
         isWifiConnected = 1;
 
-
     } else if (event_id == WIFI_EVENT_AP_STACONNECTED) {
         wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*)event_data;
         ESP_LOGI(TAG, "station " MACSTR " join, AID=%d", MAC2STR(event->mac), event->aid);
-   
+
     } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
         wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*)event_data;
         ESP_LOGI(TAG, "station " MACSTR " leave, AID=%d", MAC2STR(event->mac), event->aid);
@@ -113,24 +103,22 @@ void init_sta_mode()
         ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_NULL));
     }
     firstRun = 1;
-    char* ssid = NVS_Read_String(NVS_NAMESPACE, "wifi_ssid");
-    char* password = NVS_Read_String(NVS_NAMESPACE, "wifi_password");
-    wifi_config_t wifi_config = {
-        .sta = {
-            .ssid = SSID,
-            .password = PSK,
-            /* Setting a password implies station will connect to all security modes including WEP/WPA.
-             * However these modes are deprecated and not advisable to be used. Incase your Access point
-             * doesn't support WPA2, these mode can be enabled by commenting below line */
-            .threshold.authmode = WIFI_AUTH_WPA2_PSK,
+    char* ssid_ptr = NVS_Read_String(NVS_NAMESPACE, "wifi_ssid");
+    char* password_ptr = NVS_Read_String(NVS_NAMESPACE, "wifi_password");
 
-            .pmf_cfg = {
-                .capable = true,
-                .required = false},
+    wifi_config_t wifi_config = {
+    .sta = {
+        .threshold.authmode = WIFI_AUTH_WPA2_PSK,
+        .pmf_cfg = {
+            .capable = true,
+            .required = false
         },
+    },
     };
-    // strcpy(*wifi_config.sta.ssid,ssid);
-    // strcpy(*wifi_config.sta.password,password);
+
+    // Copy the strings into the wifi_config structure
+    strncpy((char*)wifi_config.sta.ssid, ssid_ptr, sizeof(wifi_config.sta.ssid));
+    strncpy((char*)wifi_config.sta.password, password_ptr, sizeof(wifi_config.sta.password));
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
