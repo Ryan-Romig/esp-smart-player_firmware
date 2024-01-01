@@ -1,14 +1,15 @@
-import React from "react";
-import ReactDOM from "react-dom";
+import { useState , useEffect} from 'react'
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
+import HomePage from './pages/HomePage';
 
-import "./index.css";
+function App() {
+  return (
+<Router>
+  <Routes>
+    <Route path="/" element={<HomePage/>} />
+  </Routes>
+</Router>
+  )
+}
 
-const App = () => (
-  <div className="container">
-    <div>Name: web</div>
-    <div>Framework: react</div>
-    <div>Language: JavaScript</div>
-    <div>CSS: Empty CSS</div>
-  </div>
-);
-ReactDOM.render(<App />, document.getElementById("app"));
+export default App

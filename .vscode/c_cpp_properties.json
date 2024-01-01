@@ -10,7 +10,7 @@
             "includePath": [
                 "${config:idf.espIdfPath}/components/**",
                 "${config:idf.espAdfPath}/components/**",
-                "${workspaceFolder}//**",
+                "${workspaceFolder}/**",
                 "${workspaceFolder}/components/**",
             ],
             "browse": {
@@ -19,8 +19,8 @@
                     "${config:idf.espAdfPath}/components",
                     "${workspaceFolder}/"
                 ],
-                "limitSymbolsToIncludedHeaders": false
-            }
+                "limitSymbolsToIncludedHeaders": false,
+            },
         }
     ],
     "version": 4

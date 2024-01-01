@@ -6,10 +6,12 @@
    software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
    CONDITIONS OF ANY KIND, either express or implied.
 */
-#include "sdkconfig.h"
-#include "esp_netif.h"
+#include "../../components/captive-portal/include/captive-portal.h"
+#include "../../components/config-manager/include/config-manager.h"
 #include "esp_event.h"
 #include "esp_log.h"
+#include "esp_netif.h"
+#include "sdkconfig.h"
 // #include "protocol_examples_common.h"
 
 /* HTTP Restful API Server
@@ -24,32 +26,28 @@
 */
 
 // #include "esp_vfs_fat.h"
-#include "esp_spiffs.h"
 #include "esp_log.h"
+#include "esp_spiffs.h"
 #include "lwip/apps/netbiosns.h"
 
-
-
 #include "esp_spiffs.h"
 
-#include <string.h>
-#include <fcntl.h>
-#include "esp_http_server.h"
-#include "esp_system.h"
-#include "esp_log.h"
-#include "esp_vfs.h"
 #include "cJSON.h"
+#include "esp_http_server.h"
+#include "esp_log.h"
+#include "esp_system.h"
+#include "esp_vfs.h"
+#include <fcntl.h>
+#include <string.h>
 
-static const char *TAG = "REST SERVER";
+static const char* TAG = "REST SERVER";
 #define WEB_STORAGE_MOUNT_POINT "/www"
-#define REST_CHECK(a, str, goto_tag, ...)                                              \
-    do                                                                                 \
-    {                                                                                  \
-        if (!(a))                                                                      \
-        {                                                                              \
-            ESP_LOGE(TAG, "%s(%d): " str, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
-            goto goto_tag;                                                             \
-        }                                                                              \
+#define REST_CHECK(a, str, goto_tag, ...)                                                                              \
+    do {                                                                                                               \
+        if (!(a)) {                                                                                                    \
+            ESP_LOGE(TAG, "%s(%d): " str, __FUNCTION__, __LINE__, ##__VA_ARGS__);                                      \
+            goto goto_tag;                                                                                             \
+        }                                                                                                              \
     } while (0)
 
 #define FILE_PATH_MAX (ESP_VFS_PATH_MAX + 128)
@@ -65,10 +63,7 @@ typedef struct rest_server_context {
 esp_err_t init_fs(void)
 {
     esp_vfs_spiffs_conf_t conf = {
-        .base_path = WEB_STORAGE_MOUNT_POINT,
-        .partition_label = NULL,
-        .max_files = 5,
-        .format_if_mount_failed = false
+        .base_path = WEB_STORAGE_MOUNT_POINT, .partition_label = NULL, .max_files = 5, .format_if_mount_failed = false
     };
     esp_err_t ret = esp_vfs_spiffs_register(&conf);
 
@@ -93,11 +88,10 @@ esp_err_t init_fs(void)
     return ESP_OK;
 }
 
-
 /* Set HTTP response content type according to file extension */
-static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filepath)
+static esp_err_t set_content_type_from_file(httpd_req_t* req, const char* filepath)
 {
-    const char *type = "text/plain";
+    const char* type = "text/plain";
     if (CHECK_FILE_EXTENSION(filepath, ".html")) {
         type = "text/html";
     } else if (CHECK_FILE_EXTENSION(filepath, ".js")) {
@@ -115,11 +109,11 @@ static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filepa
 }
 
 /* Send HTTP response with the contents of the requested file */
-static esp_err_t default_get_handler(httpd_req_t *req)
+static esp_err_t default_get_handler(httpd_req_t* req)
 {
     char filepath[FILE_PATH_MAX];
 
-    rest_server_context_t *rest_context = (rest_server_context_t *)req->user_ctx;
+    rest_server_context_t* rest_context = (rest_server_context_t*)req->user_ctx;
     strlcpy(filepath, rest_context->base_path, sizeof(filepath));
     if (req->uri[strlen(req->uri) - 1] == '/') {
         strlcat(filepath, "/index.html", sizeof(filepath));
@@ -136,7 +130,7 @@ static esp_err_t default_get_handler(httpd_req_t *req)
 
     set_content_type_from_file(req, filepath);
 
-    char *chunk = rest_context->scratch;
+    char* chunk = rest_context->scratch;
     ssize_t read_bytes;
     do {
         /* Read file in chunks into the scratch buffer */
@@ -165,11 +159,11 @@ static esp_err_t default_get_handler(httpd_req_t *req)
 }
 
 /* Simple handler for light brightness control */
-static esp_err_t post_handler(httpd_req_t *req)
+static esp_err_t post_handler(httpd_req_t* req)
 {
     int total_len = req->content_len;
     int cur_len = 0;
-    char *buf = ((rest_server_context_t *)(req->user_ctx))->scratch;
+    char* buf = ((rest_server_context_t*)(req->user_ctx))->scratch;
     int received = 0;
     if (total_len >= SCRATCH_BUFSIZE) {
         /* Respond with 500 Internal Server Error */
@@ -187,38 +181,43 @@ static esp_err_t post_handler(httpd_req_t *req)
     }
     buf[total_len] = '\0';
 
-    cJSON *root = cJSON_Parse(buf);
-    int red = cJSON_GetObjectItem(root, "red")->valueint;
-    int green = cJSON_GetObjectItem(root, "green")->valueint;
-    int blue = cJSON_GetObjectItem(root, "blue")->valueint;
-    ESP_LOGI(TAG, "Light control: red = %d, green = %d, blue = %d", red, green, blue);
+    printf("%s\n", buf);
+    cJSON* root = cJSON_Parse(buf);
+    cJSON* json_item = NULL;
+    cJSON_ArrayForEach(json_item, root)
+    {
+        const char* value = json_item->valuestring;
+        const char* key = json_item->string;
+        cJSON* root = cJSON_Parse(buf);
+        NVS_Write_String("config", key, value);
+        printf("Value: %s\n", value);
+        printf("Key: %s\n", key);
+    }
     cJSON_Delete(root);
     httpd_resp_sendstr(req, "Post control value successfully");
     return ESP_OK;
 }
 
 /* Simple handler for getting system handler */
-static esp_err_t get_handler(httpd_req_t *req)
+static esp_err_t get_handler(httpd_req_t* req)
 {
     httpd_resp_set_type(req, "application/json");
-    cJSON *root = cJSON_CreateObject();
-    esp_chip_info_t chip_info;
-    esp_chip_info(&chip_info);
-    cJSON_AddStringToObject(root, "version", IDF_VER);
-    cJSON_AddNumberToObject(root, "cores", chip_info.cores);
-    const char *sys_info = cJSON_Print(root);
+    char* time = NVS_Read_String("config", "time");
+    cJSON* root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "time", time);
+    const char* sys_info = cJSON_Print(root);
     httpd_resp_sendstr(req, sys_info);
-    free((void *)sys_info);
+    free((void*)sys_info);
     cJSON_Delete(root);
     return ESP_OK;
 }
 
-esp_err_t start_rest_server(const char *base_path);
+esp_err_t start_rest_server(const char* base_path);
 
-esp_err_t start_rest_server(const char *base_path)
+esp_err_t start_rest_server(const char* base_path)
 {
     REST_CHECK(base_path, "wrong base path", err);
-    rest_server_context_t *rest_context = calloc(1, sizeof(rest_server_context_t));
+    rest_server_context_t* rest_context = calloc(1, sizeof(rest_server_context_t));
     REST_CHECK(rest_context, "No memory for rest context", err);
     strlcpy(rest_context->base_path, base_path, sizeof(rest_context->base_path));
 
@@ -230,30 +229,17 @@ esp_err_t start_rest_server(const char *base_path)
     REST_CHECK(httpd_start(&server, &config) == ESP_OK, "Start server failed", err_start);
 
     /* URI handler for fetching system info */
-    httpd_uri_t get_uri = {
-        .uri = "/api/get",
-        .method = HTTP_GET,
-        .handler = get_handler,
-        .user_ctx = rest_context
-    };
+    httpd_uri_t get_uri = { .uri = "/api/get", .method = HTTP_GET, .handler = get_handler, .user_ctx = rest_context };
     httpd_register_uri_handler(server, &get_uri);
 
     /* URI handler for light brightness control */
-    httpd_uri_t post_uri = {
-        .uri = "/api/post",
-        .method = HTTP_POST,
-        .handler = post_handler,
-        .user_ctx = rest_context
-    };
+    httpd_uri_t post_uri
+        = { .uri = "/api/post", .method = HTTP_POST, .handler = post_handler, .user_ctx = rest_context };
     httpd_register_uri_handler(server, &post_uri);
 
     /* URI handler for getting web server files */
-    httpd_uri_t default_get_uri = {
-        .uri = "/*",
-        .method = HTTP_GET,
-        .handler = default_get_handler,
-        .user_ctx = rest_context
-    };
+    httpd_uri_t default_get_uri
+        = { .uri = "/*", .method = HTTP_GET, .handler = default_get_handler, .user_ctx = rest_context };
     httpd_register_uri_handler(server, &default_get_uri);
 
     return ESP_OK;
@@ -267,4 +253,5 @@ void start_wifi_server(void)
 {
     init_fs();
     ESP_ERROR_CHECK(start_rest_server(WEB_STORAGE_MOUNT_POINT));
+    captdnsInit();
 }

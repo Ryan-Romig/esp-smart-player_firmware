@@ -27,12 +27,12 @@ static EventGroupHandle_t s_wifi_event_group;
  * - we failed to connect after the maximum amount of retries */
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT BIT1
-#define WIFI_MAX_RETRY 50
+#define WIFI_MAX_RETRY 10
 #define WIFI_MAX_CONNECTION 20
 bool isApMode = false;
 int firstRun = 0;
 
-#define SSID "Ranger-h"
+#define SSID "ESP32-Access-Point"
 #define PSK "p@ssw0rd"
 static const char* TAG = "WIFI DRIVER";
 
