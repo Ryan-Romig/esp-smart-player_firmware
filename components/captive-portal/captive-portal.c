@@ -235,7 +235,7 @@ static void  captdnsRecv(struct sockaddr_in *premote_addr, char *pusrdata, unsig
 			setn16(&rf->rdlength, 4+16);
 			setn16(&uh->prio, 10);
 			setn16(&uh->weight, 1);
-			memcpy(rend, "http://192.168.4.1", 16);
+			memcpy(rend, "http://esp.nonet", 16);
 			rend+=16;
 			setn16(&rhdr->ancount, my_ntohs(&rhdr->ancount)+1);
             //printf("Added NS rec to resp. Resp len is %d\n", (rend-reply));
