@@ -1,1 +1,1 @@
-# esp-smart-player_firmware
+# Device firmware build using ESP-IDF
